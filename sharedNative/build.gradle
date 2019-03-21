@@ -1,0 +1,44 @@
+apply plugin: 'kotlin-multiplatform'
+buildscript {
+    ext.ios_framework_name = 'KotlinShared'
+}
+kotlin {
+    targets {
+        fromPreset(presets.iosX64, 'ios') {
+            binaries {
+                framework("$ios_framework_name") {
+                    embedBitcode('disable')
+                }
+            }
+        }
+    }
+    sourceSets {
+        commonMain.dependencies {
+            implementation 'org.jetbrains.kotlin:kotlin-stdlib-common'
+        }
+    }
+}
+
+task packForXcode {
+    final File frameworkDir = new File(buildDir, "xcode-frameworks")
+    final String buildType = project.findProperty("XCODE_CONFIGURATION")?.toUpperCase() ?: 'DEBUG'
+
+    def keyFrameworkPrefix = "$ios_framework_name${buildType.toLowerCase().capitalize()}"
+    dependsOn "link${keyFrameworkPrefix}FrameworkIos"
+
+    doLast {
+        def srcFile = kotlin.targets.ios.binaries.getFramework("$ios_framework_name", buildType).outputFile
+
+        copy {
+            from srcFile.parent
+            into frameworkDir
+        }
+
+        new File(frameworkDir, 'gradlew').with {
+            text = "#!/bin/bash\nexport 'JAVA_HOME=${System.getProperty("java.home")}'\ncd '${rootProject.rootDir}'\n./gradlew \$@\n"
+            setExecutable(true)
+        }
+    }
+}
+
+tasks.build.dependsOn packForXcode

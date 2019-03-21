@@ -1,0 +1,9 @@
+//
+//  Config.xcconfig
+//  SampleiOS
+//
+//  Created by Alexandre Ménielle on 21/03/2019.
+//  Copyright © 2019 Alexandre Ménielle. All rights reserved.
+//
+
+FRAMEWORK_SEARCH_PATHS = $(inherited) $SRCROOT/../../sharedNative/build/xcode-frameworks
